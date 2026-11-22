@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" id="meta-theme" content="#0d1117">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PyMeow">
+<title>PyMeow · Python no navegador</title>
+<link id="fav" rel="icon">
+<link id="apple-icon" rel="apple-touch-icon">
+<link id="pwa-manifest" rel="manifest">
+<style>
+:root{
+  --bg:#0d1117;
+  --pn:#161b22;
+  --bd:#30363d;
+  --tx:#c9d1d9;
+  --bl:#3776ab;
+  --ye:#ffd43b;
+  --gr:#8b949e;
+  --code-font: 400 13px/20px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  color-scheme: dark;
+}
+:root[data-theme="light"]{
+  --bg:#f6f8fa;
+  --pn:#ffffff;
+  --bd:#d0d7de;
+  --tx:#1f2328;
+  --bl:#2b6596;
+  --ye:#b07d00;
+  --gr:#57606a;
+  color-scheme: light;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--tx);font:14px system-ui,-apple-system,sans-serif;overflow:hidden;transition:background-color .2s,color .2s}
+body{display:flex;flex-direction:column}
+
+/* Cabeçalho */
+header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 12px;background:var(--pn);border-bottom:1px solid var(--bd);flex-shrink:0}
+.logo{display:flex;align-items:center;gap:8px;font-weight:700;font-size:19px;margin-right:auto;user-select:none}
+.logo img{width:32px;height:32px;border-radius:8px;object-fit:cover;border:1px solid var(--bd)}
+.logo b{color:var(--bl);margin-right:-6px}
+.logo span{color:var(--ye)}
+
+button,select,a.tt-btn{font:inherit;color:var(--tx);background:var(--bg);border:1px solid var(--bd);border-radius:6px;padding:6px 10px;cursor:pointer;transition:border-color .15s,background-color .15s,color .15s;text-decoration:none;display:inline-flex;align-items:center;gap:6px;line-height:1.2}
+button:hover:not(:disabled),select:hover,a.tt-btn:hover{border-color:var(--gr)}
+button:disabled{opacity:.5;cursor:not-allowed}
+:focus-visible{outline:2px solid var(--ye);outline-offset:1px}
+
+a.tt-btn{font-size:13px;font-weight:600}
+a.tt-btn svg{width:15px;height:15px;flex-shrink:0}
+a.tt-btn .tt-badge{color:var(--ye)}
+
+#run{background:var(--bl);border-color:var(--bl);color:#fff;font-weight:600}
+#run:hover:not(:disabled){background:#2d628f;border-color:#2d628f}
+#run.stop{background:#8b2d2d;border-color:#8b2d2d}
+#run.stop:hover{background:#a33636;border-color:#a33636}
+#run small{opacity:.75;font-weight:400;margin-left:6px}
+
+#st{display:flex;align-items:center;gap:6px;color:var(--gr);font-size:13px;padding-left:4px}
+#st::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--ye);flex-shrink:0}
+#st[data-s=ready]::before{background:#3fb950}
+#st[data-s=running]::before{background:#58a6ff;animation:p 1s infinite}
+#st[data-s=error]::before{background:#f85149}
+@keyframes p{50%{opacity:.3}}
+
+#bar{height:3px;background:var(--bd);transition:opacity .35s;flex-shrink:0}
+#bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--bl),var(--ye));transition:width .25s ease-out}
+
+/* Layout principal e divisor */
+main{flex:1;display:flex;min-height:0;overflow:hidden}
+.l{flex:0 0 var(--l,52%)}
+.r{flex:1}
+.l,.r{display:flex;flex-direction:column;min-width:0;min-height:0;background:var(--pn)}
+#sp{flex:0 0 6px;background:var(--bd);cursor:col-resize;touch-action:none;transition:background .15s}
+#sp:hover,#sp.on{background:var(--ye)}
+
+/* Abas superiores */
+.bar{display:flex;gap:2px;overflow-x:auto;background:var(--bg);border-bottom:1px solid var(--bd);padding:4px 6px 0;flex-shrink:0;scrollbar-width:none}
+.bar::-webkit-scrollbar{display:none}
+#tabs{display:flex;gap:2px}
+.tab,.rt{border:0;border-radius:6px 6px 0 0;background:none;color:var(--gr);white-space:nowrap;padding:6px 10px;font-size:13px}
+.tab:hover,.rt:hover{color:var(--tx);background:#161b2288}
+.tab.on,.rt.on{background:var(--pn);color:var(--ye);font-weight:600}
+.tab span{margin-left:8px;opacity:.7;padding:0 2px;border-radius:3px}
+.tab span:hover{opacity:1;color:#fff;background:#30363d}
+
+/* Editor com alinhamento tipográfico exato */
+.wrap{flex:1;display:flex;min-height:0;position:relative;overflow:hidden}
+.gut{flex:0 0 48px;overflow:hidden;border-right:1px solid var(--bd);background:var(--pn);user-select:none}
+#ln{
+  margin:0;
+  padding:12px 8px 12px 0;
+  font:var(--code-font);
+  letter-spacing:0;
+  text-align:right;
+  color:var(--gr);
+  white-space:pre;
+  will-change:transform;
+}
+.ed{flex:1;position:relative;overflow:hidden;background:var(--pn)}
+#hl,#ta{
+  margin:0;
+  padding:12px;
+  border:0;
+  font:var(--code-font);
+  letter-spacing:0;
+  tab-size:4;
+  -moz-tab-size:4;
+  white-space:pre;
+  word-wrap:normal;
+  overflow-wrap:normal;
+  font-variant-ligatures:none;
+}
+#hl{
+  position:absolute;
+  top:0;
+  left:0;
+  min-width:100%;
+  min-height:100%;
+  pointer-events:none;
+  color:var(--tx);
+  will-change:transform;
+}
+#ta{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  outline:0;
+  resize:none;
+  overflow:auto;
+  background:transparent;
+  color:transparent;
+  caret-color:var(--ye);
+  -webkit-text-fill-color:transparent;
+}
+#ta::selection{background:#3776ab77;color:transparent}
+#hl i{font-style:normal}
+#hl .k{color:#ff7b72}
+#hl .b{color:#79c0ff}
+#hl .s{color:#a5d6ff}
+#hl .c{color:var(--gr);font-style:italic}
+#hl .d{color:var(--ye)}
+#hl .n{color:#d2a8ff}
+:root[data-theme="light"] #hl .k{color:#cf222e}
+:root[data-theme="light"] #hl .b{color:#0550ae}
+:root[data-theme="light"] #hl .s{color:#0a3069}
+:root[data-theme="light"] #hl .d{color:#953800}
+:root[data-theme="light"] #hl .n{color:#8250df}
+
+/* Painéis da direita (Console, Gráficos, Pacotes) */
+.pane{flex:1;min-height:0;overflow:auto;padding:12px}
+#con{font:13px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;white-space:pre-wrap;word-break:break-word;background:var(--bg)}
+#con .e{color:#ff7b72}
+:root[data-theme="light"] #con .e{color:#cf222e}
+#con .sy{color:var(--gr);font-style:italic}
+#con .u{color:var(--ye);font-weight:600}
+.in{background:var(--pn);border:1px solid var(--bd);border-radius:4px;padding:1px 6px;color:var(--ye);font:inherit;outline:0;width:min(65%,42ch)}
+
+#plt{display:flex;flex-direction:column;gap:14px;align-items:center}
+#plt:empty::before{content:"Nenhum gráfico ainda. Use plt.show() no seu código.";color:var(--gr);margin-top:24px}
+#plt img{max-width:100%;border:1px solid var(--bd);border-radius:6px;cursor:pointer;transition:transform .15s,border-color .15s}
+#plt img:hover{border-color:var(--ye)}
+
+#q{width:100%;margin-bottom:8px;padding:8px 10px;background:var(--bg);border:1px solid var(--bd);border-radius:6px;color:var(--tx);font:inherit}
+#q:focus{border-color:var(--ye);outline:0}
+.pk{display:flex;align-items:center;gap:8px;padding:8px 4px;border-bottom:1px solid var(--bd)}
+.pk div{flex:1;min-width:0}
+.pk small{display:block;color:var(--gr);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* Diálogo inline não-bloqueante (substitui prompt/confirm nativos) */
+#dlg-bg{position:fixed;inset:0;background:#010409aa;display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+#dlg{background:var(--pn);border:1px solid var(--bd);border-radius:8px;padding:16px;width:min(380px,100%);box-shadow:0 12px 32px #00000088}
+#dlg h3{margin:0 0 10px;font-size:15px;color:var(--tx)}
+#dlg p{margin:0 0 12px;font-size:13px;color:var(--gr);line-height:1.4}
+#dlg input{width:100%;padding:8px 10px;margin-bottom:12px;background:var(--bg);border:1px solid var(--bd);border-radius:6px;color:var(--tx);font:inherit}
+#dlg input:focus{border-color:var(--ye);outline:0}
+#dlg .act{display:flex;justify-content:flex-end;gap:8px}
+#dlg .ok{background:var(--bl);border-color:var(--bl);color:#fff;font-weight:600}
+
+@media(max-width:760px){
+  main{flex-direction:column}
+  #sp{cursor:row-resize}
+  #run small{display:none}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo"><img id="lg" alt="PyMeow"><b>Py</b><span>Meow</span></div>
+  <a class="tt-btn" href="https://www.tiktok.com/@zeezz9711" target="_blank" rel="noopener noreferrer" title="Abrir TikTok @zeezz9711" aria-label="TikTok @zeezz9711">
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/></svg>
+    <span>TikTok</span><span class="tt-badge">@zeezz9711</span>
+  </a>
+  <select id="ex" aria-label="Exemplos prontos"></select>
+  <button id="theme-btn" type="button" title="Alternar tema claro/escuro" aria-label="Alternar tema">🌓 Auto</button>
+  <button id="run" disabled title="Ctrl+Enter">▶ Executar<small>Ctrl+Enter</small></button>
+  <button id="clr">Limpar Console</button>
+  <button id="dlp">Baixar .py</button>
+  <div id="st" data-s="loading">Carregando</div>
+</header>
+<div id="bar"><i></i></div>
+<main id="m">
+  <section class="l">
+    <div class="bar">
+      <div id="tabs"></div>
+      <button class="tab" id="add" title="Novo arquivo">+</button>
+      <button class="tab" id="up" title="Enviar arquivo">↑ Enviar</button>
+      <input type="file" id="fi" multiple hidden>
+    </div>
+    <div class="wrap">
+      <div class="gut"><pre id="ln" aria-hidden="true">1</pre></div>
+      <div class="ed">
+        <pre id="hl" aria-hidden="true"></pre>
+        <textarea id="ta" spellcheck="false" autocapitalize="off" autocomplete="off" wrap="off" aria-label="Editor de código Python"></textarea>
+      </div>
+    </div>
+  </section>
+  <div id="sp" role="separator" aria-label="Redimensionar painéis"></div>
+  <section class="r">
+    <div class="bar">
+      <button class="rt on" data-p="con">Console</button>
+      <button class="rt" data-p="plt">Gráficos</button>
+      <button class="rt" data-p="pk">Pacotes</button>
+    </div>
+    <div class="pane" id="con"></div>
+    <div class="pane" id="plt" hidden></div>
+    <div class="pane" id="pk" hidden>
+      <input id="q" placeholder="Buscar ou digitar um pacote (Enter instala)" autocomplete="off">
+      <div id="pl"></div>
+    </div>
+  </section>
+</main>
+
+<!-- Modal leve para criar arquivo ou confirmar ações sem usar window.prompt/confirm -->
+<div id="dlg-bg" hidden>
+  <div id="dlg" role="dialog" aria-modal="true">
+    <h3 id="dlg-t"></h3>
+    <p id="dlg-p" hidden></p>
+    <input id="dlg-i" hidden autocomplete="off">
+    <div class="act">
+      <button id="dlg-no">Cancelar</button>
+      <button id="dlg-ok" class="ok">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(()=>{
+"use strict";
+
+/* ===== Configuração do Pyodide (v0.27.2 estável no jsDelivr) ===== */
+const PYODIDE_VERSION = "0.27.2";
+const PYURL = `https://cdn.jsdelivr.net/pyodide/v${PYODIDE_VERSION}/full/`;
+const PYURL_FALLBACK = "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/";
+
+const LOGO="data:image/jpeg;base64,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";
+
+/* ===== Python de inicialização (executa dentro do worker) =====
+   - Matplotlib em backend AGG: plt.show() envia PNG base64 para a aba Gráficos
+   - Carregamento sob demanda de pacotes do Pyodide + auto-instalação via micropip
+   - Suporte aprimorado a input(): converte funções que usam input() em async/await,
+     ignorando métodos dunder (__init__, __str__, etc.) e oferecendo fallback síncrono. */
+const BOOT = String.raw`
+import ast, sys, os, io, base64, traceback, inspect, builtins, importlib.util
+
+os.environ["MPLBACKEND"] = "AGG"
+from js import emit, ask, askSync
+
+def _sync_input(p=""):
+    res = askSync(str(p))
+    return "" if res is None else str(res)
+
+builtins.input = _sync_input
+
+async def _ainput(p=""):
+    return await ask(str(p))
+
+_mpl_ready = False
+def _setup_mpl():
+    global _mpl_ready
+    if _mpl_ready:
+        return
+    try:
+        import matplotlib
+        matplotlib.use("AGG")
+        import matplotlib.pyplot as plt
+        plt.style.use("dark_background")
+        matplotlib.rcParams.update({
+            "figure.facecolor": "#161b22",
+            "axes.facecolor": "#0d1117",
+            "savefig.facecolor": "#161b22"
+        })
+        def _show(*a, **k):
+            for n in plt.get_fignums():
+                b = io.BytesIO()
+                plt.figure(n).savefig(b, format="png", dpi=110, bbox_inches="tight")
+                emit("plot", base64.b64encode(b.getvalue()).decode())
+            plt.close("all")
+        plt.show = _show
+        _mpl_ready = True
+    except Exception:
+        pass
+
+def _flush_plots():
+    if "matplotlib.pyplot" in sys.modules:
+        _setup_mpl()
+        import matplotlib.pyplot as plt
+        if plt.get_fignums():
+            plt.show()
+
+PIP = {
+    "sklearn": "scikit-learn",
+    "PIL": "pillow",
+    "bs4": "beautifulsoup4",
+    "cv2": "opencv-python",
+    "yaml": "pyyaml",
+    "dateutil": "python-dateutil",
+    "skimage": "scikit-image"
+}
+
+def _nm(f):
+    return f.id if isinstance(f, ast.Name) else f.attr if isinstance(f, ast.Attribute) else None
+
+def _imps(t):
+    s = set()
+    for n in ast.walk(t):
+        if isinstance(n, ast.Import):
+            s |= {a.name.split(".")[0] for a in n.names}
+        elif isinstance(n, ast.ImportFrom) and not n.level and n.module:
+            s.add(n.module.split(".")[0])
+    return s
+
+def _has(m):
+    try:
+        return (
+            m in sys.stdlib_module_names
+            or importlib.util.find_spec(m) is not None
+            or os.path.exists(m + ".py")
+        )
+    except Exception:
+        return False
+
+async def _auto(t):
+    import pyodide_js, micropip
+    ms = _imps(t)
+    missing = [m for m in sorted(ms) if not _has(m)]
+    if missing:
+        emit("progress", 25)
+        for idx, m in enumerate(missing):
+            p = PIP.get(m, m)
+            emit("progress", 25 + int((idx / max(1, len(missing))) * 65))
+            print(f"[PyMeow] carregando/instalando {p}…")
+            try:
+                await pyodide_js.loadPackage(p)
+            except Exception:
+                try:
+                    await micropip.install(p)
+                except Exception as e:
+                    print(f"[PyMeow] falha ao instalar {p}: {str(e)[:280]}", file=sys.stderr)
+        emit("progress", 95)
+
+    if "matplotlib" in ms or "matplotlib" in sys.modules:
+        _setup_mpl()
+
+    if ms & {"requests", "urllib3"}:
+        try:
+            await micropip.install("pyodide-http")
+            import pyodide_http
+            pyodide_http.patch_all()
+        except Exception:
+            pass
+
+def _is_dunder(name):
+    return len(name) > 4 and name.startswith("__") and name.endswith("__")
+
+def _asyncs(t):
+    fs = [n for n in ast.walk(t) if isinstance(n, ast.FunctionDef) and not _is_dunder(n.name)]
+    a = set()
+    ch = True
+    while ch:
+        ch = False
+        for f in fs:
+            if f.name in a:
+                continue
+            for c in ast.walk(f):
+                if isinstance(c, ast.Call):
+                    fn = _nm(c.func)
+                    if (isinstance(c.func, ast.Name) and c.func.id == "input") or fn in a:
+                        a.add(f.name)
+                        ch = True
+                        break
+    return a
+
+class _T(ast.NodeTransformer):
+    def __init__(self, a):
+        self.a = a
+        self._in_sync_fn = False
+
+    def visit_FunctionDef(self, n):
+        if n.name in self.a:
+            prev = self._in_sync_fn
+            self._in_sync_fn = False
+            self.generic_visit(n)
+            self._in_sync_fn = prev
+            return ast.copy_location(
+                ast.AsyncFunctionDef(**{k: getattr(n, k) for k in n._fields}),
+                n
+            )
+        prev = self._in_sync_fn
+        self._in_sync_fn = True
+        self.generic_visit(n)
+        self._in_sync_fn = prev
+        return n
+
+    def visit_Call(self, n):
+        self.generic_visit(n)
+        if self._in_sync_fn:
+            return n
+        if isinstance(n.func, ast.Name) and n.func.id == "input":
+            n.func = ast.Name("_ainput", ast.Load())
+            return ast.Await(n)
+        if _nm(n.func) in self.a:
+            return ast.Await(n)
+        return n
+
+async def _run(src, name):
+    for k, m in list(sys.modules.items()):
+        f = getattr(m, "__file__", None)
+        if isinstance(f, str) and os.path.dirname(os.path.abspath(f)) == os.getcwd():
+            del sys.modules[k]
+    g = {"__name__": "__main__", "__file__": name, "_ainput": _ainput}
+    try:
+        t = ast.parse(src, name)
+        await _auto(t)
+        t = _T(_asyncs(t)).visit(t)
+        ast.fix_missing_locations(t)
+        r = eval(compile(t, name, "exec", flags=ast.PyCF_ALLOW_TOP_LEVEL_AWAIT), g)
+        if inspect.isawaitable(r):
+            await r
+    except SystemExit:
+        pass
+    except BaseException:
+        et, e, tb = sys.exc_info()
+        while tb and tb.tb_frame.f_code.co_filename == "<exec>":
+            tb = tb.tb_next
+        traceback.print_exception(et, e, tb)
+    finally:
+        _flush_plots()
+`;
+
+/* ===== Web Worker (serializado via Blob para manter arquivo único) ===== */
+function workerMain(PY_PRIMARY, PY_FALLBACK, BOOT){
+  let activePY = PY_PRIMARY;
+  try {
+    importScripts(activePY + "pyodide.js");
+  } catch (e1) {
+    try {
+      activePY = PY_FALLBACK;
+      importScripts(activePY + "pyodide.js");
+    } catch (e2) {
+      postMessage({t:"fatal", s:`Não foi possível baixar o Pyodide (${PY_PRIMARY} nem ${PY_FALLBACK}).`});
+      return;
+    }
+  }
+
+  let py, pend;
+  const P = (t, o) => postMessage({t, ...o});
+  const st = (s, p, m) => P("status", {s, p, m});
+  const TXT = /\.(py|csv|json|txt|md|tsv)$/i;
+  const isF = n => { try { return py.FS.isFile(py.FS.stat(n).mode); } catch { return false; } };
+  const list = () => py.FS.readdir(".").filter(n => n[0] !== "." && n !== "__pycache__" && n !== "tmp" && n !== "home" && n !== "dev" && n !== "proc" && isF(n));
+
+  const pkgs = async () => {
+    try {
+      const r = await py.runPythonAsync("import micropip, json\njson.dumps({k: v.version for k, v in micropip.list().items()})");
+      P("pkgs", {d: JSON.parse(r)});
+    } catch {}
+  };
+
+  (async () => {
+    try {
+      st("loading", 15, "iniciando WebAssembly");
+      py = await loadPyodide({
+        indexURL: activePY,
+        stdout: s => P("out", {s: s + "\n"}),
+        stderr: s => P("err", {s: s + "\n"})
+      });
+      st("loading", 55, "carregando micropip");
+      await py.loadPackage("micropip");
+      st("loading", 85, "configurando ambiente");
+      self.emit = (t, d) => P(t, {d});
+      self.ask = p => new Promise(r => { pend = r; P("input", {p}); });
+      self.askSync = p => {
+        P("out", {s: (p ? p + " " : "") + "[entrada síncrona ignorada em método especial]\n"});
+        return "";
+      };
+      await py.runPythonAsync(BOOT);
+      await pkgs();
+      st("ready", 100);
+    } catch (e) {
+      P("fatal", {s: String(e)});
+    }
+  })();
+
+  onmessage = async ({data: d}) => {
+    if (d.t === "stdin") {
+      if (pend) { const fn = pend; pend = null; fn(d.v); }
+      return;
+    }
+    if (!py) return;
+    try {
+      st("running", 10);
+      if (d.t === "run") {
+        list().forEach(n => { try { py.FS.unlink(n); } catch {} });
+        for (const n in d.files) {
+          py.FS.writeFile(n, d.files[n]);
+        }
+        py.globals.set("_SRC", d.code);
+        py.globals.set("_NAME", d.name);
+        await py.runPythonAsync("await _run(_SRC, _NAME)");
+        const o = {};
+        for (const n of list()) {
+          const b = py.FS.readFile(n);
+          o[n] = TXT.test(n) ? new TextDecoder().decode(b) : b;
+        }
+        P("files", {d: o});
+      } else if (d.t === "install") {
+        st("running", 35);
+        py.globals.set("_PKG", d.pkg);
+        await py.runPythonAsync("import pyodide_js, micropip\ntry:\n await pyodide_js.loadPackage(_PKG)\nexcept Exception:\n await micropip.install(_PKG)");
+        P("out", {s: "[PyMeow] " + d.pkg + " instalado\n"});
+      }
+      await pkgs();
+    } catch (e) {
+      P("err", {s: String(e.message || e) + "\n"});
+    }
+    st("ready", 100);
+  };
+}
+
+/* ===== Exemplos ===== */
+const CSV=`produto,categoria,preco,qtd
+Ração,pet,59.9,3
+Arranhador,pet,89.5,1
+Teclado,tech,199.0,2
+Mouse,tech,79.9,4
+Caderno,papelaria,24.5,10
+Caneta,papelaria,3.2,50
+`;
+
+const EX=[
+{n:"1. Boas-vindas PyMeow",c:String.raw`import sys, platform
+
+print(r"""
+ /\_/\    PyMeow
+( o.o )   Python no navegador
+ > ^ <    via Pyodide + WebAssembly
+""")
+nome = input("Qual é o seu nome? ")
+print(f"Miau, {nome}! 🐾")
+print("Python", sys.version.split()[0], "|", platform.machine())
+print("2 ** 100 =", 2 ** 100)
+print([n * n for n in range(1, 11)])
+`},
+{n:"2. Análise de dados",c:String.raw`import numpy as np
+import pandas as pd
+
+df = pd.read_csv("dados.csv")            # arquivo da aba dados.csv (MEMFS)
+df["total"] = df["preco"] * df["qtd"]
+print(df, "\n")
+print(df.groupby("categoria")["total"].agg(["sum", "mean"]).round(2), "\n")
+
+rng = np.random.default_rng(42)
+df["nota"] = rng.normal(7, 1.2, len(df)).clip(0, 10).round(1)
+print(df.describe().round(2))
+df.to_csv("resultado.csv", index=False)  # aparece como nova aba
+print("\nSalvo: resultado.csv")
+`},
+{n:"3. Gráfico científico",c:String.raw`import numpy as np
+import matplotlib.pyplot as plt
+from scipy import signal
+
+t = np.linspace(0, 2, 1000)
+x = np.exp(-1.5 * t) * np.sin(2 * np.pi * 8 * t)   # oscilador amortecido
+f, p = signal.periodogram(x, fs=500)
+
+fig, (a, b) = plt.subplots(2, 1, figsize=(8, 6))
+a.plot(t, x, color="#ffd43b"); a.set_title("Oscilador amortecido")
+b.semilogy(f, p + 1e-12, color="#4b8bbe"); b.set_xlim(0, 40); b.set_title("Espectro de potência")
+fig.tight_layout()
+plt.show()   # vai para a aba Gráficos
+`},
+{n:"4. Instalação dinâmica",c:String.raw`# Sem pip install: o PyMeow detecta os imports e instala sozinho
+import sympy as sp      # distribuição do Pyodide
+import cowsay           # PyPI, via micropip
+
+x = sp.symbols("x")
+print(sp.integrate(sp.sin(x) ** 2, x))
+print(sp.solve(x**2 - 5*x + 6, x))
+cowsay.cow("Miau? Instalei sozinho!")
+`}];
+
+/* ===== Utilidades e estado ===== */
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const TXT = /\.(py|csv|json|txt|md|tsv)$/i;
+
+const ta = $("#ta"), hl = $("#hl"), ln = $("#ln"), con = $("#con");
+let files = {"main.py": EX[0].c, "dados.csv": CSV};
+let cur = "main.py", ST = "loading", W;
+const inst = {};
+
+/* ===== Ícones PWA em PNG (192x192 e 512x512) a partir da imagem LOGO original + Manifest + Service Worker ===== */
+function makePwaIconPng(size, callback) {
+  try {
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const c = document.createElement("canvas");
+        c.width = size;
+        c.height = size;
+        const ctx = c.getContext("2d");
+        ctx.drawImage(img, 0, 0, size, size);
+        callback(c.toDataURL("image/png"));
+      } catch {
+        callback(LOGO);
+      }
+    };
+    img.onerror = () => callback(LOGO);
+    img.src = LOGO;
+  } catch {
+    callback(LOGO);
+  }
+}
+
+$("#lg").src = LOGO;
+$("#fav").href = LOGO;
+$("#apple-icon").href = LOGO;
+
+function buildManifest(icon192, icon512) {
+  try {
+    const manifest = {
+      name: "PyMeow · Python no navegador",
+      short_name: "PyMeow",
+      description: "Ambiente Python interativo no navegador com WebAssembly, gráficos e pacotes sob demanda.",
+      start_url: "./",
+      scope: "./",
+      display: "standalone",
+      orientation: "any",
+      background_color: "#0d1117",
+      theme_color: "#0d1117",
+      icons: [
+        { src: icon192, sizes: "192x192", type: "image/png", purpose: "any maskable" },
+        { src: icon512, sizes: "512x512", type: "image/png", purpose: "any maskable" }
+      ]
+    };
+    const mBlob = new Blob([JSON.stringify(manifest)], { type: "application/manifest+json" });
+    const prev = $("#pwa-manifest").href;
+    $("#pwa-manifest").href = URL.createObjectURL(mBlob);
+    if (prev && prev.startsWith("blob:")) {
+      setTimeout(() => URL.revokeObjectURL(prev), 1500);
+    }
+  } catch {}
+}
+
+function setupPwa() {
+  buildManifest(LOGO, LOGO);
+  makePwaIconPng(192, i192 => {
+    $("#apple-icon").href = i192;
+    makePwaIconPng(512, i512 => {
+      buildManifest(i192, i512);
+    });
+  });
+
+  if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost" || location.hostname === "127.0.0.1")) {
+    try {
+      const swCode = `
+        const CACHE_NAME = "pymeow-pwa-v1";
+        self.addEventListener("install", e => {
+          self.skipWaiting();
+          e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(["./"]).catch(() => {})));
+        });
+        self.addEventListener("activate", e => {
+          e.waitUntil(
+            caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))))
+              .then(() => self.clients.claim())
+          );
+        });
+        self.addEventListener("fetch", e => {
+          if (e.request.method !== "GET") return;
+          e.respondWith(
+            fetch(e.request).then(res => {
+              if (res && res.status === 200 && res.type === "basic") {
+                const clone = res.clone();
+                caches.open(CACHE_NAME).then(c => c.put(e.request, clone)).catch(() => {});
+              }
+              return res;
+            }).catch(() => caches.match(e.request))
+          );
+        });
+      `;
+      const swBlob = new Blob([swCode], { type: "application/javascript" });
+      const swUrl = URL.createObjectURL(swBlob);
+      navigator.serviceWorker.register(swUrl, { scope: "./" }).catch(() => {});
+    } catch {}
+  }
+}
+setupPwa();
+
+/* ===== Tema adaptativo (auto por padrão + alternância manual) ===== */
+const mqTheme = window.matchMedia ? window.matchMedia("(prefers-color-scheme: light)") : null;
+let themeMode = "auto"; // "auto" | "dark" | "light"
+
+function applyTheme() {
+  const effective = themeMode === "auto"
+    ? (mqTheme && mqTheme.matches ? "light" : "dark")
+    : themeMode;
+  document.documentElement.setAttribute("data-theme", effective);
+  const bgMeta = effective === "light" ? "#f6f8fa" : "#0d1117";
+  const mt = $("#meta-theme");
+  if (mt) mt.setAttribute("content", bgMeta);
+  const btn = $("#theme-btn");
+  if (btn) {
+    btn.textContent = themeMode === "auto"
+      ? `🌓 Auto (${effective === "light" ? "Claro" : "Escuro"})`
+      : (effective === "light" ? "☀️ Claro" : "🌙 Escuro");
+  }
+}
+
+$("#theme-btn").onclick = () => {
+  themeMode = themeMode === "auto" ? "light" : (themeMode === "light" ? "dark" : "auto");
+  applyTheme();
+};
+if (mqTheme) {
+  if (mqTheme.addEventListener) mqTheme.addEventListener("change", () => { if (themeMode === "auto") applyTheme(); });
+  else if (mqTheme.addListener) mqTheme.addListener(() => { if (themeMode === "auto") applyTheme(); });
+}
+applyTheme();
+
+/* ===== Modal customizado (sem window.prompt / window.confirm) ===== */
+function askDialog({title, text = "", defaultValue = null, okText = "Confirmar"}) {
+  return new Promise(resolve => {
+    const bg = $("#dlg-bg"), inp = $("#dlg-i"), p = $("#dlg-p"), ok = $("#dlg-ok"), no = $("#dlg-no");
+    $("#dlg-t").textContent = title;
+    p.hidden = !text; p.textContent = text;
+    inp.hidden = defaultValue === null;
+    if (defaultValue !== null) inp.value = defaultValue;
+    ok.textContent = okText;
+    bg.hidden = false;
+    (defaultValue !== null ? inp : ok).focus();
+    if (defaultValue !== null) inp.select();
+
+    const close = val => {
+      bg.hidden = true;
+      ok.onclick = no.onclick = inp.onkeydown = bg.onclick = null;
+      resolve(val);
+    };
+    ok.onclick = () => close(defaultValue !== null ? inp.value : true);
+    no.onclick = () => close(null);
+    bg.onclick = e => { if (e.target === bg) close(null); };
+    inp.onkeydown = e => {
+      if (e.key === "Enter") { e.preventDefault(); ok.click(); }
+      if (e.key === "Escape") { e.preventDefault(); no.click(); }
+    };
+  });
+}
+
+/* ===== Syntax highlighting de Python ===== */
+const KW = new Set("False None True and as assert async await break class continue def del elif else except finally for from global if import in is lambda nonlocal not or pass raise return try while with yield match case".split(" "));
+const BI = new Set("print len range int str float list dict set tuple open input sum min max abs sorted enumerate zip map filter isinstance type super round bool any all reversed".split(" "));
+const RX = /(#.*)|("""[\s\S]*?(?:"""|$)|'''[\s\S]*?(?:'''|$)|(?:[rbfuRBFU]{1,2})?"(?:\\.|[^"\\\n])*"?|(?:[rbfuRBFU]{1,2})?'(?:\\.|[^'\\\n])*'?)|(@\w+)|(\b\d[\d_]*\.?\d*(?:[eE][+-]?\d+)?\b)|([A-Za-z_]\w*)/g;
+
+function HL(t){
+  let o = "", i = 0, m;
+  RX.lastIndex = 0;
+  while((m = RX.exec(t))){
+    o += esc(t.slice(i, m.index));
+    i = RX.lastIndex;
+    const k = m[1] ? "c" : m[2] ? "s" : m[3] ? "d" : m[4] ? "n" : KW.has(m[5]) ? "k" : BI.has(m[5]) ? "b" : "";
+    o += k ? `<i class="${k}">${esc(m[0])}</i>` : esc(m[0]);
+  }
+  return o + esc(t.slice(i)) + "\n";
+}
+
+/* ===== Editor: numeração, realce, abas e arquivos ===== */
+function upd(){
+  const v = ta.value;
+  if (typeof files[cur] === "string") files[cur] = v;
+  hl.innerHTML = HL(v);
+  const lines = v.split("\n").length;
+  ln.textContent = Array.from({length: lines}, (_, i) => i + 1).join("\n");
+}
+
+function scrollSync(){
+  hl.style.transform = `translate(${-ta.scrollLeft}px, ${-ta.scrollTop}px)`;
+  ln.style.transform = `translateY(${-ta.scrollTop}px)`;
+}
+
+function load(){
+  const t = files[cur], s = typeof t === "string";
+  ta.readOnly = !s;
+  ta.value = s ? t : "[arquivo binário: use ↓ na aba para baixar]";
+  upd();
+  tabs();
+  scrollSync();
+}
+
+function tabs(){
+  $("#tabs").innerHTML = Object.keys(files).map(n =>
+    `<button class="tab${n === cur ? " on" : ""}" data-n="${esc(n)}">${esc(n)}${
+      n === cur
+        ? `<span data-a="dl" title="Baixar">↓</span>${n !== "main.py" ? `<span data-a="rm" title="Excluir">×</span>` : ""}`
+        : ""
+    }</button>`
+  ).join("");
+}
+
+function dl(n){
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([files[n]]));
+  a.download = n;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+$("#tabs").onclick = async e => {
+  const b = e.target.closest(".tab");
+  if (!b) return;
+  const n = b.dataset.n, a = e.target.dataset.a;
+  if (a === "dl") dl(n);
+  else if (a === "rm") {
+    delete files[n];
+    cur = "main.py";
+    load();
+  } else if (n !== cur) {
+    cur = n;
+    load();
+  }
+};
+
+$("#add").onclick = async () => {
+  const res = await askDialog({title: "Novo arquivo", defaultValue: "novo.py", okText: "Criar"});
+  const n = (res || "").trim();
+  if (!n || /[\/\\]/.test(n)) return;
+  if (!(n in files)) files[n] = "";
+  cur = n;
+  load();
+};
+
+$("#up").onclick = () => $("#fi").click();
+$("#fi").onchange = async e => {
+  for (const f of e.target.files) {
+    const b = new Uint8Array(await f.arrayBuffer());
+    files[f.name] = TXT.test(f.name) ? new TextDecoder().decode(b) : b;
+    cur = f.name;
+  }
+  e.target.value = "";
+  load();
+};
+
+function ins(t){
+  if (!document.execCommand("insertText", false, t)) {
+    ta.setRangeText(t, ta.selectionStart, ta.selectionEnd, "end");
+    upd();
+  }
+}
+
+ta.oninput = upd;
+ta.onscroll = scrollSync;
+ta.onkeydown = e => {
+  if (e.key === "Tab") {
+    e.preventDefault();
+    ins("    ");
+  } else if (e.key === "Enter" && !e.ctrlKey && !e.metaKey) {
+    e.preventDefault();
+    const v = ta.value, s = ta.selectionStart, l = v.slice(v.lastIndexOf("\n", s - 1) + 1, s);
+    ins("\n" + l.match(/^\s*/)[0] + (/:\s*$/.test(l) ? "    " : ""));
+  }
+};
+
+$("#ex").innerHTML = EX.map((x, i) => `<option value="${i}">${x.n}</option>`).join("");
+let lastEx = "0";
+$("#ex").onchange = async e => {
+  const idx = e.target.value;
+  if (files["main.py"] !== EX[lastEx].c) {
+    const ok = await askDialog({
+      title: "Substituir main.py?",
+      text: "O exemplo selecionado substituirá o conteúdo atual de main.py. Seus outros arquivos serão mantidos.",
+      okText: "Carregar exemplo"
+    });
+    if (!ok) {
+      e.target.value = lastEx;
+      return;
+    }
+  }
+  lastEx = idx;
+  files["main.py"] = EX[idx].c;
+  if (!("dados.csv" in files)) files["dados.csv"] = CSV;
+  cur = "main.py";
+  load();
+};
+
+/* ===== Console, abas da direita e status ===== */
+function put(s, c){
+  const e = document.createElement("span");
+  if (c) e.className = c;
+  e.innerHTML = c === "e"
+    ? esc(s).replace(/^(\w+(?:Error|Exception|Exit|Interrupt))\b/gm, "<b>$1</b>")
+    : esc(s);
+  con.append(e);
+  con.scrollTop = con.scrollHeight;
+}
+
+function pane(id){
+  $$(".pane").forEach(p => p.hidden = p.id !== id);
+  $$(".rt").forEach(b => b.classList.toggle("on", b.dataset.p === id));
+  if (id === "pk") pkList();
+}
+$$(".rt").forEach(b => b.onclick = () => pane(b.dataset.p));
+
+function setSt(s, p, m){
+  ST = s;
+  const b = $("#st");
+  b.dataset.s = s;
+  const labels = {loading: "Carregando", ready: "Pronto", running: "Executando", error: "Erro"};
+  b.textContent = (labels[s] || s) + ((s === "loading" || s === "running") && m ? ` · ${m}` : "");
+  if (p != null) $("#bar i").style.width = p + "%";
+  $("#bar").style.opacity = (s === "loading" || (s === "running" && p != null && p < 100)) ? 1 : 0;
+  const r = $("#run");
+  r.disabled = (s === "loading" || s === "error");
+  r.classList.toggle("stop", s === "running");
+  r.innerHTML = s === "running" ? "■ Parar" : "▶ Executar<small>Ctrl+Enter</small>";
+}
+
+/* ===== Gerenciador de pacotes ===== */
+const CAT = [
+  ["numpy", "Computação numérica e arrays"],
+  ["pandas", "Análise e manipulação de dados"],
+  ["matplotlib", "Gráficos e visualizações"],
+  ["scipy", "Computação científica"],
+  ["scikit-learn", "Machine learning"],
+  ["sympy", "Matemática simbólica"],
+  ["networkx", "Grafos e redes"],
+  ["pillow", "Processamento de imagens"],
+  ["beautifulsoup4", "Análise de HTML"],
+  ["requests", "Requisições HTTP"],
+  ["seaborn", "Gráficos estatísticos"],
+  ["statsmodels", "Modelos estatísticos"],
+  ["pyyaml", "Leitura e escrita YAML"],
+  ["openpyxl", "Planilhas Excel"],
+  ["cowsay", "Vaquinha falante (PyPI)"]
+];
+
+function pkList(){
+  const q = $("#q").value.trim().toLowerCase();
+  const key = n => n.toLowerCase().replace(/_/g, "-");
+  const row = (n, d) => {
+    const v = inst[key(n)];
+    return `<div class="pk"><div><b>${esc(n)}</b><small>${esc(v ? "instalado · " + v : d)}</small></div><button data-p="${esc(n)}"${v ? " disabled" : ""}>${v ? "✓" : "Instalar"}</button></div>`;
+  };
+  let h = "";
+  if (q && !CAT.some(c => c[0] === q) && !inst[key(q)]) {
+    h += row(q, "Instalar do Pyodide / PyPI");
+  }
+  const all = [...CAT, ...Object.keys(inst).filter(n => !CAT.some(c => c[0] === n)).map(n => [n, "Pacote instalado"])];
+  $("#pl").innerHTML = h + all
+    .filter(([n, d]) => !q || n.includes(q) || d.toLowerCase().includes(q))
+    .map(([n, d]) => row(n, d))
+    .join("");
+}
+
+$("#q").oninput = pkList;
+$("#q").onkeydown = e => { if (e.key === "Enter") $("#pl button:not(:disabled)")?.click(); };
+$("#pl").onclick = e => {
+  const b = e.target.closest("button[data-p]");
+  if (!b || b.disabled) return;
+  if (ST !== "ready") return put("[PyMeow] aguarde o motor ficar pronto.\n", "sy");
+  b.disabled = true;
+  b.textContent = "…";
+  put("[PyMeow] instalando " + b.dataset.p + "…\n", "sy");
+  W.postMessage({t: "install", pkg: b.dataset.p});
+};
+
+/* ===== Comunicação com o worker ===== */
+function onMsg({data: d}){
+  switch (d.t) {
+    case "status":
+      setSt(d.s, d.p, d.m);
+      break;
+    case "progress":
+      if (ST === "running") setSt("running", d.d, "instalando pacotes");
+      break;
+    case "out":
+      put(d.s, d.s.startsWith("[PyMeow]") ? "sy" : "");
+      break;
+    case "err":
+      put(d.s, d.s.startsWith("[PyMeow]") ? "sy" : "e");
+      break;
+    case "plot": {
+      const i = new Image();
+      i.src = "data:image/png;base64," + d.d;
+      i.title = "Clique para baixar grafico.png";
+      i.onclick = () => {
+        const a = document.createElement("a");
+        a.href = i.src;
+        a.download = "grafico.png";
+        a.click();
+      };
+      $("#plt").append(i);
+      pane("plt");
+      break;
+    }
+    case "input": {
+      put(d.p);
+      pane("con");
+      const i = document.createElement("input");
+      i.className = "in";
+      i.setAttribute("aria-label", "Entrada do programa");
+      con.append(i);
+      i.focus();
+      i.onkeydown = e => {
+        if (e.key === "Enter") {
+          const v = i.value;
+          i.remove();
+          put(v + "\n", "u");
+          W.postMessage({t: "stdin", v});
+        }
+      };
+      break;
+    }
+    case "files": {
+      let changed = false;
+      for (const n in d.d) {
+        if (!(n in files)) {
+          files[n] = d.d[n];
+          changed = true;
+        } else if (n !== cur) {
+          files[n] = d.d[n];
+        }
+      }
+      if (changed) tabs();
+      break;
+    }
+    case "pkgs":
+      Object.keys(inst).forEach(k => delete inst[k]);
+      for (const k in d.d) inst[k.toLowerCase().replace(/_/g, "-")] = d.d[k];
+      pkList();
+      break;
+    case "fatal":
+      put("Falha ao iniciar o Python: " + d.s + "\nVerifique sua conexão com a internet (CDN jsDelivr).\n", "e");
+      setSt("error", 0, "falha no CDN");
+      break;
+  }
+}
+
+function boot(){
+  setSt("loading", 5, "iniciando");
+  const src = `(${workerMain})(${JSON.stringify(PYURL)}, ${JSON.stringify(PYURL_FALLBACK)}, ${JSON.stringify(BOOT)})`;
+  W = new Worker(URL.createObjectURL(new Blob([src], {type: "text/javascript"})));
+  W.onmessage = onMsg;
+  W.onerror = e => put("Erro no worker: " + e.message + "\n", "e");
+}
+
+function run(){
+  if (ST !== "ready") return;
+  $("#plt").innerHTML = "";
+  pane("con");
+  const n = /\.py$/.test(cur) ? cur : "main.py";
+  W.postMessage({t: "run", code: files[n], name: n, files});
+}
+
+function halt(){
+  put("[PyMeow] execução interrompida; reiniciando o motor…\n", "sy");
+  W.terminate();
+  boot();
+}
+
+$("#run").onclick = () => ST === "running" ? halt() : run();
+$("#clr").onclick = () => { con.innerHTML = ""; };
+$("#dlp").onclick = () => dl(/\.py$/.test(cur) ? cur : "main.py");
+addEventListener("keydown", e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+    e.preventDefault();
+    run();
+  }
+});
+
+/* ===== Divisor redimensionável ===== */
+const sp = $("#sp"), mn = $("#m");
+sp.onpointerdown = e => { sp.setPointerCapture(e.pointerId); sp.classList.add("on"); };
+sp.onpointermove = e => {
+  if (!sp.classList.contains("on")) return;
+  const r = mn.getBoundingClientRect();
+  const p = innerWidth > 760 ? (e.clientX - r.left) / r.width : (e.clientY - r.top) / r.height;
+  mn.style.setProperty("--l", Math.min(80, Math.max(20, p * 100)) + "%");
+};
+sp.onpointerup = () => sp.classList.remove("on");
+
+put("PyMeow · inicializando ambiente Python (pacotes pesados são baixados sob demanda)…\n", "sy");
+load();
+boot();
+})();
+</script>
+</body>
+</html>
